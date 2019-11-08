@@ -18,6 +18,12 @@ package com.lmax.disruptor;
 /**
  * Coordinates claiming sequences for access to a data structure while tracking dependent {@link Sequence}s
  */
+
+/**
+ * producer和ringbuffer之间的桥梁。Sequencer用于向Ringbuffer申请空间，使用publish方法通过WaitStrategy通知所有在等待可消费事件的SequenceBarrier。
+ * SingleProducerSequencer：用于对应单生产者
+ * MultiProducerSequencer：用于对应多生产者
+ */
 public interface Sequencer extends Cursored, Sequenced
 {
     /**
@@ -39,6 +45,7 @@ public interface Sequencer extends Cursored, Sequenced
      * @param sequence of the buffer to check
      * @return true if the sequence is available for use, false if not
      */
+    //非阻塞，用于确认某个需要是否已经发布且事件是否可用
     boolean isAvailable(long sequence);
 
     /**
@@ -47,6 +54,7 @@ public interface Sequencer extends Cursored, Sequenced
      *
      * @param gatingSequences The sequences to add.
      */
+    //增加门控序列（消费者序列），用于生产者在生产者在生产时避免追尾消费者
     void addGatingSequences(Sequence... gatingSequences);
 
     /**
@@ -55,6 +63,7 @@ public interface Sequencer extends Cursored, Sequenced
      * @param sequence to be removed.
      * @return <tt>true</tt> if this sequence was found, <tt>false</tt> otherwise.
      */
+    //移除指定的门控序列
     boolean removeGatingSequence(Sequence sequence);
 
     /**
@@ -65,6 +74,7 @@ public interface Sequencer extends Cursored, Sequenced
      * @return A sequence barrier that will track the specified sequences.
      * @see SequenceBarrier
      */
+    //使用给定的sequencesToTrack来创建SequenceBarrier，消费者使用SequenceBarrier来追踪Ringbuffer中可以读的序列
     SequenceBarrier newBarrier(Sequence... sequencesToTrack);
 
     /**
@@ -74,6 +84,7 @@ public interface Sequencer extends Cursored, Sequenced
      * @return The minimum gating sequence or the cursor sequence if
      * no sequences have been added.
      */
+    //获取追踪序列中最小的序列
     long getMinimumSequence();
 
     /**
@@ -87,6 +98,11 @@ public interface Sequencer extends Cursored, Sequenced
      * @param nextSequence      The sequence to start scanning from.
      * @param availableSequence The sequence to scan to.
      * @return The highest value that can be safely read, will be at least <code>nextSequence - 1</code>.
+     */
+    /**
+     * 获取能够从环形缓冲读取的最高的序列号。依赖Sequencer的实现，可能会扫描Sequencer的一些值。扫描从nextSequence
+     * 到availableSequence。如果没有大于等于nextSequence的可用值，返回值将为nextSequence-1。为了工作正常，消费者
+     *  应该传递一个比最后成功处理的序列值大1的值
      */
     long getHighestPublishedSequence(long nextSequence, long availableSequence);
 

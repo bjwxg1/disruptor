@@ -43,8 +43,14 @@ class RhsPadding extends Value
  * <p>Also attempts to be more efficient with regards to false
  * sharing by adding padding around the volatile field.
  */
+
+/**
+ * 采用cache line填充的方式对long类型的包装，用于代表事件的序列号。
+ * 并发的Sequence，用于跟踪Ringbuffer中的任务变化和消费者的消费情况,生产和消费程序都有Sequence，记录生产和消费程序的序列
+ */
 public class Sequence extends RhsPadding
 {
+    //Sequence的默认初始值
     static final long INITIAL_VALUE = -1L;
     private static final Unsafe UNSAFE;
     private static final long VALUE_OFFSET;
@@ -54,6 +60,7 @@ public class Sequence extends RhsPadding
         UNSAFE = Util.getUnsafe();
         try
         {
+            //获取value字段的起始地址偏移量
             VALUE_OFFSET = UNSAFE.objectFieldOffset(Value.class.getDeclaredField("value"));
         }
         catch (final Exception e)

@@ -26,6 +26,7 @@ import com.lmax.disruptor.util.Util;
  * The {@link SequenceGroup#get()} and {@link SequenceGroup#set(long)} methods are lock free and can be
  * concurrently be called with the {@link SequenceGroup#add(Sequence)} and {@link SequenceGroup#remove(Sequence)}.
  */
+//Sequence组
 public final class SequenceGroup extends Sequence
 {
     private static final AtomicReferenceFieldUpdater<SequenceGroup, Sequence[]> SEQUENCE_UPDATER =

@@ -29,9 +29,11 @@ public abstract class AbstractSequencer implements Sequencer
 {
     private static final AtomicReferenceFieldUpdater<AbstractSequencer, Sequence[]> SEQUENCE_UPDATER =
         AtomicReferenceFieldUpdater.newUpdater(AbstractSequencer.class, Sequence[].class, "gatingSequences");
-
+    //Ringbuffer 大小
     protected final int bufferSize;
+    //等待策略
     protected final WaitStrategy waitStrategy;
+    //初始化一个Sequence
     protected final Sequence cursor = new Sequence(Sequencer.INITIAL_CURSOR_VALUE);
     protected volatile Sequence[] gatingSequences = new Sequence[0];
 
@@ -47,6 +49,7 @@ public abstract class AbstractSequencer implements Sequencer
         {
             throw new IllegalArgumentException("bufferSize must not be less than 1");
         }
+        //bufferSize需要是2的n次方
         if (Integer.bitCount(bufferSize) != 1)
         {
             throw new IllegalArgumentException("bufferSize must be a power of 2");

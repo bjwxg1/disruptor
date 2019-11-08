@@ -39,7 +39,9 @@ abstract class SingleProducerSequencerFields extends SingleProducerSequencerPad
     /**
      * Set to -1 as sequence starting point
      */
+    //Producer上次已经申请完毕的序列值
     long nextValue = Sequence.INITIAL_VALUE;
+    //消费者消费的最小位置【最慢消费者的消费位置】
     long cachedValue = Sequence.INITIAL_VALUE;
 }
 
@@ -79,6 +81,7 @@ public final class SingleProducerSequencer extends SingleProducerSequencerFields
     {
         long nextValue = this.nextValue;
 
+        //
         long wrapPoint = (nextValue + requiredCapacity) - bufferSize;
         long cachedGatingSequence = this.cachedValue;
 
@@ -122,15 +125,19 @@ public final class SingleProducerSequencer extends SingleProducerSequencerFields
         }
 
         long nextValue = this.nextValue;
-
+        //本次需要申请的Sequence
         long nextSequence = nextValue + n;
+        //因为Ringbuffer使用环形缓冲，所以计算可能产生环绕的点：nextSequence - bufferSize
         long wrapPoint = nextSequence - bufferSize;
         long cachedGatingSequence = this.cachedValue;
-
+        //wrapPoint等于cachedGatingSequence将发生绕环行为，producer将在ringbuffer上，从后方覆盖未消费的事件。
+        //此处是防止producer覆盖消费者的核心
         if (wrapPoint > cachedGatingSequence || cachedGatingSequence > nextValue)
         {
+            //TODO
             cursor.setVolatile(nextValue);  // StoreLoad fence
 
+            //自选等待，直到不会出现覆盖位置
             long minSequence;
             while (wrapPoint > (minSequence = Util.getMinimumSequence(gatingSequences, nextValue)))
             {

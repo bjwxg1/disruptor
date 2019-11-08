@@ -7,6 +7,7 @@ public interface Sequenced
      *
      * @return the size of the RingBuffer.
      */
+    //获取RingBuffer的大小
     int getBufferSize();
 
     /**
@@ -16,6 +17,7 @@ public interface Sequenced
      * @param requiredCapacity in the buffer
      * @return true if the buffer has the capacity to allocate the next sequence otherwise false.
      */
+    //Ringbuffer是否可用的空间来容纳requiredCapacity
     boolean hasAvailableCapacity(int requiredCapacity);
 
     /**
@@ -23,6 +25,7 @@ public interface Sequenced
      *
      * @return The number of slots remaining.
      */
+    //Ringbuffer的可用容量
     long remainingCapacity();
 
     /**
@@ -30,6 +33,7 @@ public interface Sequenced
      *
      * @return the claimed sequence value
      */
+    //申请一个序列号，用于发布
     long next();
 
     /**
@@ -48,6 +52,7 @@ public interface Sequenced
      * @param n the number of sequences to claim
      * @return the highest claimed sequence value
      */
+    //申请n个序列号，用于批量发布
     long next(int n);
 
     /**
@@ -77,6 +82,7 @@ public interface Sequenced
      *
      * @param sequence the sequence to be published.
      */
+    //数据填充后，发布此序列号
     void publish(long sequence);
 
     /**
@@ -85,5 +91,6 @@ public interface Sequenced
      * @param lo first sequence number to publish
      * @param hi last sequence number to publish
      */
+    //批量发布序列号
     void publish(long lo, long hi);
 }

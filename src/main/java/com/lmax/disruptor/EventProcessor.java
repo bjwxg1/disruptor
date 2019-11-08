@@ -23,6 +23,7 @@ package com.lmax.disruptor;
  * <p>
  * An EventProcessor will generally be associated with a Thread for execution.
  */
+//事件处理器，是消费者线程池Executor的调度单元，是对事件处理EventHandler与异常处理ExceptionHandler等的一层封装；
 public interface EventProcessor extends Runnable
 {
     /**
