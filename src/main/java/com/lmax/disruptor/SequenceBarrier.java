@@ -20,7 +20,8 @@ package com.lmax.disruptor;
  * Coordination barrier for tracking the cursor for publishers and sequence of
  * dependent {@link EventProcessor}s for processing a data structure
  */
-//消费者与Ringbuffer的桥梁。消费者并不直接访问RingBuffer，从而能减少RingBuffer上的并发冲突
+//消费者与RingBuffer的桥梁。消费者并不直接访问RingBuffer，从而能减少RingBuffer上的并发冲突
+//SequenceBarrier被EventProcessor持有，用于等待可消费的事件
 public interface SequenceBarrier
 {
     /**
@@ -32,6 +33,7 @@ public interface SequenceBarrier
      * @throws InterruptedException if the thread needs awaking on a condition variable.
      * @throws TimeoutException     if a timeout occurs while waiting for the supplied sequence.
      */
+    //等待指定的sequence可用
     long waitFor(long sequence) throws AlertException, InterruptedException, TimeoutException;
 
     /**
@@ -39,6 +41,7 @@ public interface SequenceBarrier
      *
      * @return value of the cursor for entries that have been published.
      */
+    //获取当前可以读游标
     long getCursor();
 
     /**
@@ -46,16 +49,19 @@ public interface SequenceBarrier
      *
      * @return true if in alert otherwise false.
      */
+    //获取当前的alert状态
     boolean isAlerted();
 
     /**
      * Alert the {@link EventProcessor}s of a status change and stay in this status until cleared.
      */
+    //通知消费者状态变化。当调用EventProcessor#halt()将调用此方法。
     void alert();
 
     /**
      * Clear the current alert status.
      */
+    //清楚alert状态
     void clearAlert();
 
     /**
@@ -63,5 +69,6 @@ public interface SequenceBarrier
      *
      * @throws AlertException if alert has been raised.
      */
+    //检查是否发生alert，发生将抛出异常
     void checkAlert() throws AlertException;
 }

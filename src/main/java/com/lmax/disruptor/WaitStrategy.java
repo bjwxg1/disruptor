@@ -19,7 +19,7 @@ package com.lmax.disruptor;
 /**
  * Strategy employed for making {@link EventProcessor}s wait on a cursor {@link Sequence}.
  */
-//消费者无消息可以消费时的等待策略
+//EventProcessor等待Sequence可以消费时的等待策略
 public interface WaitStrategy
 {
     /**
@@ -39,11 +39,19 @@ public interface WaitStrategy
      * @throws InterruptedException if the thread is interrupted.
      * @throws TimeoutException if a timeout occurs before waiting completes (not used by some strategies)
      */
+    /**
+     *
+     * @param sequence 等待的消费的游标
+     * @param cursor   生产者的生产游标
+     * @param dependentSequence EventProcess存在依赖关系时，依赖的EventProcessor的游标
+     * @param barrier 等待的barrier
+     */
     long waitFor(long sequence, Sequence cursor, Sequence dependentSequence, SequenceBarrier barrier)
         throws AlertException, InterruptedException, TimeoutException;
 
     /**
      * Implementations should signal the waiting {@link EventProcessor}s that the cursor has advanced.
      */
+    //唤醒所有的EventProcessor，生产者有新的事件到达
     void signalAllWhenBlocking();
 }

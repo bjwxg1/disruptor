@@ -25,8 +25,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *
  * @param <T> event implementation storing the details for the work to processed.
  */
-public final class WorkProcessor<T>
-    implements EventProcessor
+public final class WorkProcessor<T> implements EventProcessor
 {
     private final AtomicBoolean running = new AtomicBoolean(false);
     private final Sequence sequence = new Sequence(Sequencer.INITIAL_CURSOR_VALUE);

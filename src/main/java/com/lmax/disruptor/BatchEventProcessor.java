@@ -27,19 +27,26 @@ import java.util.concurrent.atomic.AtomicInteger;
  *
  * @param <T> event implementation storing the data for sharing during exchange or parallel coordination of an event.
  */
-public final class BatchEventProcessor<T>
-    implements EventProcessor
+public final class BatchEventProcessor<T> implements EventProcessor
 {
+    //
     private static final int IDLE = 0;
     private static final int HALTED = IDLE + 1;
     private static final int RUNNING = HALTED + 1;
 
+    //状态标识
     private final AtomicInteger running = new AtomicInteger(IDLE);
+    //异常处理器，默认为FatalExceptionHandler
     private ExceptionHandler<? super T> exceptionHandler = new FatalExceptionHandler();
+    //数据提供者，默认是RingBuffer
     private final DataProvider<T> dataProvider;
+    //SequenceBarrier
     private final SequenceBarrier sequenceBarrier;
+    //Processor对应的事件处理器
     private final EventHandler<? super T> eventHandler;
+    //与该Processor关联的Sequence，记录该Processor消费情况【消费位置】
     private final Sequence sequence = new Sequence(Sequencer.INITIAL_CURSOR_VALUE);
+    //超时处理器
     private final TimeoutHandler timeoutHandler;
     private final BatchStartAware batchStartAware;
 
@@ -113,8 +120,8 @@ public final class BatchEventProcessor<T>
     @Override
     public void run()
     {
-        if (running.compareAndSet(IDLE, RUNNING))
-        {
+        if (running.compareAndSet(IDLE, RUNNING)) {
+            //设置alert为false
             sequenceBarrier.clearAlert();
 
             notifyStart();

@@ -62,6 +62,7 @@ public class Disruptor<T>
     private final RingBuffer<T> ringBuffer;
     //消费者线程池
     private final Executor executor;
+    //消费者仓库
     private final ConsumerRepository<T> consumerRepository = new ConsumerRepository<>();
     //Disruptor启动标识
     private final AtomicBoolean started = new AtomicBoolean(false);

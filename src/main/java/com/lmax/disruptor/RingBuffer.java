@@ -28,13 +28,18 @@ abstract class RingBufferPad
 
 abstract class RingBufferFields<E> extends RingBufferPad
 {
+    //TODO 这几个参数是干嘛
+    //用于在数组中进行缓存行填充的空元素个数
     private static final int BUFFER_PAD;
+    //内存中引用数组的开始元素基地址，是数组开始的地址+BUFFER_PAD个元素的偏移量之和，后续元素的内存地址需要在此基础计算地址
     private static final long REF_ARRAY_BASE;
+    //引用元素的位移量，用于计算BUFFER_PAD偏移量，基于位移计算比乘法运算更高效
     private static final int REF_ELEMENT_SHIFT;
     private static final Unsafe UNSAFE = Util.getUnsafe();
 
     static
     {
+        //arrayIndexScale获取数组中一个元素占用的字节数，不同JVM实现可能有不同的大小
         final int scale = UNSAFE.arrayIndexScale(Object[].class);
         if (4 == scale)
         {
@@ -48,14 +53,20 @@ abstract class RingBufferFields<E> extends RingBufferPad
         {
             throw new IllegalStateException("Unknown pointer size");
         }
+        // TODO
+        // BUFFER_PAD=32 or 16，为什么是128呢？是为了满足处理器的缓存行预取功能(Adjacent Cache-Line Prefetch)
         BUFFER_PAD = 128 / scale;
         // Including the buffer pad in the array base offset
+        // BUFFER_PAD<< REF_ELEMENT_SHIFT 实际上是BUFFER_PAD * scale的等价高效计算方式
         REF_ARRAY_BASE = UNSAFE.arrayBaseOffset(Object[].class) + (BUFFER_PAD << REF_ELEMENT_SHIFT);
     }
 
+    //indexMask = bufferSize - 1,主要用于计算entry存放位置
     private final long indexMask;
+    //存放entry的数组
     private final Object[] entries;
     protected final int bufferSize;
+    //Sequencer 生产者需要
     protected final Sequencer sequencer;
 
     RingBufferFields(
@@ -69,6 +80,7 @@ abstract class RingBufferFields<E> extends RingBufferPad
         {
             throw new IllegalArgumentException("bufferSize must not be less than 1");
         }
+        //保证bufferSize是2的N次方
         if (Integer.bitCount(bufferSize) != 1)
         {
             throw new IllegalArgumentException("bufferSize must be a power of 2");
@@ -76,6 +88,9 @@ abstract class RingBufferFields<E> extends RingBufferPad
 
         this.indexMask = bufferSize - 1;
         this.entries = new Object[sequencer.getBufferSize() + 2 * BUFFER_PAD];
+        //提前初始化对象有两点好处:
+        //1:是避免频繁的创建销毁，减少young gc，
+        //2:是通过初始化所有对象，尽可能使对象内存连续，由于处理器通常开启了缓存预取机制（参见Intel缓存预取文章），这样就增加了缓存效率，降低了整体时延
         fill(eventFactory);
     }
 
@@ -491,7 +506,9 @@ public final class RingBuffer<E> extends RingBufferFields<E> implements Cursored
     @Override
     public <A> void publishEvent(EventTranslatorOneArg<E, A> translator, A arg0)
     {
+        //占用ringbuffer上一个可以写入的位置【并没有进行数据的写入】
         final long sequence = sequencer.next();
+        //在可用的位置写入数据，并pushlish时间【RingBuffer在初始化时已经初始化了Entry数组，覆盖Entry属性集合】
         translateAndPublish(translator, sequence, arg0);
     }
 
@@ -975,6 +992,7 @@ public final class RingBuffer<E> extends RingBufferFields<E> implements Cursored
         }
         finally
         {
+            //publish消息，唤醒等待的消费者
             sequencer.publish(sequence);
         }
     }
