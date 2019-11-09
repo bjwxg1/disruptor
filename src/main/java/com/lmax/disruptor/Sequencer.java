@@ -26,8 +26,7 @@ package com.lmax.disruptor;
  * SingleProducerSequencer：用于对应单生产者
  * MultiProducerSequencer：用于对应多生产者
  */
-public interface Sequencer extends Cursored, Sequenced
-{
+public interface Sequencer extends Cursored, Sequenced {
     /**
      * Set to -1 as sequence starting point
      */

@@ -118,79 +118,58 @@ public final class BatchEventProcessor<T> implements EventProcessor
      * @throws IllegalStateException if this object instance is already running in a thread
      */
     @Override
-    public void run()
-    {
+    public void run() {
         if (running.compareAndSet(IDLE, RUNNING)) {
             //设置alert为false
             sequenceBarrier.clearAlert();
 
             notifyStart();
-            try
-            {
-                if (running.get() == RUNNING)
-                {
+            try {
+                if (running.get() == RUNNING) {
                     processEvents();
                 }
             }
-            finally
-            {
+            finally {
                 notifyShutdown();
                 running.set(IDLE);
             }
-        }
-        else
-        {
+        } else {
             // This is a little bit of guess work.  The running state could of changed to HALTED by
             // this point.  However, Java does not have compareAndExchange which is the only way
             // to get it exactly correct.
-            if (running.get() == RUNNING)
-            {
+            if (running.get() == RUNNING) {
                 throw new IllegalStateException("Thread is already running");
-            }
-            else
-            {
+            } else {
                 earlyExit();
             }
         }
     }
 
-    private void processEvents()
-    {
+    private void processEvents() {
         T event = null;
         long nextSequence = sequence.get() + 1L;
 
-        while (true)
-        {
-            try
-            {
+        while (true) {
+            try {
                 final long availableSequence = sequenceBarrier.waitFor(nextSequence);
-                if (batchStartAware != null)
-                {
+                if (batchStartAware != null) {
                     batchStartAware.onBatchStart(availableSequence - nextSequence + 1);
                 }
 
-                while (nextSequence <= availableSequence)
-                {
+                while (nextSequence <= availableSequence) {
                     event = dataProvider.get(nextSequence);
                     eventHandler.onEvent(event, nextSequence, nextSequence == availableSequence);
                     nextSequence++;
                 }
 
                 sequence.set(availableSequence);
-            }
-            catch (final TimeoutException e)
-            {
+            } catch (final TimeoutException e) {
                 notifyTimeout(sequence.get());
-            }
-            catch (final AlertException ex)
-            {
-                if (running.get() != RUNNING)
-                {
+            } catch (final AlertException ex) {
+                if (running.get() != RUNNING) {
                     break;
                 }
-            }
-            catch (final Throwable ex)
-            {
+            } catch (final Throwable ex) {
                 exceptionHandler.handleEventException(ex, nextSequence, event);
                 sequence.set(nextSequence);
                 nextSequence++;

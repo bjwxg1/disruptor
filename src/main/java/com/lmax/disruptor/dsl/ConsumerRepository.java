@@ -30,8 +30,7 @@ class ConsumerRepository<T> implements Iterable<ConsumerInfo>
     private final Map<Sequence, ConsumerInfo> eventProcessorInfoBySequence = new IdentityHashMap<>();
     private final Collection<ConsumerInfo> consumerInfos = new ArrayList<>();
 
-    public void add(
-        final EventProcessor eventprocessor,
+    public void add(final EventProcessor eventprocessor,
         final EventHandler<? super T> handler,
         final SequenceBarrier barrier)
     {
@@ -58,18 +57,14 @@ class ConsumerRepository<T> implements Iterable<ConsumerInfo>
         }
     }
 
-    public Sequence[] getLastSequenceInChain(boolean includeStopped)
-    {
+    public Sequence[] getLastSequenceInChain(boolean includeStopped) {
         List<Sequence> lastSequence = new ArrayList<>();
-        for (ConsumerInfo consumerInfo : consumerInfos)
-        {
-            if ((includeStopped || consumerInfo.isRunning()) && consumerInfo.isEndOfChain())
-            {
+        for (ConsumerInfo consumerInfo : consumerInfos) {
+            if ((includeStopped || consumerInfo.isRunning()) && consumerInfo.isEndOfChain()) {
                 final Sequence[] sequences = consumerInfo.getSequences();
                 Collections.addAll(lastSequence, sequences);
             }
         }
-
         return lastSequence.toArray(new Sequence[lastSequence.size()]);
     }
 

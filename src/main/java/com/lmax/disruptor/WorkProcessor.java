@@ -25,8 +25,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *
  * @param <T> event implementation storing the details for the work to processed.
  */
-public final class WorkProcessor<T> implements EventProcessor
-{
+public final class WorkProcessor<T> implements EventProcessor {
     private final AtomicBoolean running = new AtomicBoolean(false);
     private final Sequence sequence = new Sequence(Sequencer.INITIAL_CURSOR_VALUE);
     private final RingBuffer<T> ringBuffer;
@@ -84,8 +83,7 @@ public final class WorkProcessor<T> implements EventProcessor
     }
 
     @Override
-    public void halt()
-    {
+    public void halt() {
         running.set(false);
         sequenceBarrier.alert();
     }
@@ -102,72 +100,57 @@ public final class WorkProcessor<T> implements EventProcessor
      * @throws IllegalStateException if this processor is already running
      */
     @Override
-    public void run()
-    {
-        if (!running.compareAndSet(false, true))
-        {
+    public void run() {
+        //启动WorkProcessor
+        if (!running.compareAndSet(false, true)) {
             throw new IllegalStateException("Thread is already running");
         }
         sequenceBarrier.clearAlert();
-
         notifyStart();
-
+        //处理标识，判断上一个获取的Event是否已经被处理，如果已经处理才会获取下一个
         boolean processedSequence = true;
+        //cachedAvailableSequence 记录可以消费的Event的offset上线
         long cachedAvailableSequence = Long.MIN_VALUE;
         long nextSequence = sequence.get();
         T event = null;
-        while (true)
-        {
-            try
-            {
+        while (true) {
+            try {
                 // if previous sequence was processed - fetch the next sequence and set
                 // that we have successfully processed the previous sequence
                 // typically, this will be true
                 // this prevents the sequence getting too far forward if an exception
                 // is thrown from the WorkHandler
-                if (processedSequence)
-                {
+                if (processedSequence) {
                     processedSequence = false;
-                    do
-                    {
+                    do {
+                        //这就是WorkProcessor是为什么消息队列模型的原因？【不同WorkProcessor消费不同的消息】
+                        //workSequence记录了消费位移，所有的WorkProcessor公用一个workSequence来记录消费offset
                         nextSequence = workSequence.get() + 1L;
                         sequence.set(nextSequence - 1L);
                     }
                     while (!workSequence.compareAndSet(nextSequence - 1L, nextSequence));
                 }
 
-                if (cachedAvailableSequence >= nextSequence)
-                {
+                if (cachedAvailableSequence >= nextSequence) {
                     event = ringBuffer.get(nextSequence);
                     workHandler.onEvent(event);
                     processedSequence = true;
-                }
-                else
-                {
+                } else {
                     cachedAvailableSequence = sequenceBarrier.waitFor(nextSequence);
                 }
-            }
-            catch (final TimeoutException e)
-            {
+            } catch (final TimeoutException e) {
                 notifyTimeout(sequence.get());
-            }
-            catch (final AlertException ex)
-            {
-                if (!running.get())
-                {
+            } catch (final AlertException ex) {
+                if (!running.get()) {
                     break;
                 }
-            }
-            catch (final Throwable ex)
-            {
+            } catch (final Throwable ex) {
                 // handle, mark as processed, unless the exception handler threw an exception
                 exceptionHandler.handleEventException(ex, nextSequence, event);
                 processedSequence = true;
             }
         }
-
         notifyShutdown();
-
         running.set(false);
     }
 

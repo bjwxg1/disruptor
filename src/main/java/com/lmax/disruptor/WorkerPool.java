@@ -26,9 +26,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *
  * @param <T> event to be processed by a pool of workers
  */
-public final class WorkerPool<T>
-{
+public final class WorkerPool<T> {
     private final AtomicBoolean started = new AtomicBoolean(false);
+    //workSequence:WorkProcessor实现一次消费的基础，记录了这组Processor获取event的offset
     private final Sequence workSequence = new Sequence(Sequencer.INITIAL_CURSOR_VALUE);
     private final RingBuffer<T> ringBuffer;
     // WorkProcessors are created to wrap each of the provided WorkHandlers
@@ -124,18 +124,15 @@ public final class WorkerPool<T>
      * @return the {@link RingBuffer} used for the work queue.
      * @throws IllegalStateException if the pool has already been started and not halted yet
      */
-    public RingBuffer<T> start(final Executor executor)
-    {
-        if (!started.compareAndSet(false, true))
-        {
+    public RingBuffer<T> start(final Executor executor) {
+        if (!started.compareAndSet(false, true)) {
             throw new IllegalStateException("WorkerPool has already been started and cannot be restarted until halted.");
         }
 
         final long cursor = ringBuffer.getCursor();
         workSequence.set(cursor);
 
-        for (WorkProcessor<?> processor : workProcessors)
-        {
+        for (WorkProcessor<?> processor : workProcessors) {
             processor.getSequence().set(cursor);
             executor.execute(processor);
         }

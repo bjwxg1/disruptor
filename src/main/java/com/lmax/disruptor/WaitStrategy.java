@@ -20,8 +20,7 @@ package com.lmax.disruptor;
  * Strategy employed for making {@link EventProcessor}s wait on a cursor {@link Sequence}.
  */
 //EventProcessor等待Sequence可以消费时的等待策略
-public interface WaitStrategy
-{
+public interface WaitStrategy {
     /**
      * Wait for the given sequence to be available.  It is possible for this method to return a value
      * less than the sequence number supplied depending on the implementation of the WaitStrategy.  A common

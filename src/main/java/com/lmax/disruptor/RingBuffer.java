@@ -987,12 +987,10 @@ public final class RingBuffer<E> extends RingBufferFields<E> implements Cursored
 
     private <A> void translateAndPublish(EventTranslatorOneArg<E, A> translator, long sequence, A arg0)
     {
-        try
-        {
+        try {
             translator.translateTo(get(sequence), sequence, arg0);
         }
-        finally
-        {
+        finally {
             //publish消息，唤醒等待的消费者
             sequencer.publish(sequence);
         }

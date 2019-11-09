@@ -92,8 +92,7 @@ public class Sequence extends RhsPadding
      *
      * @return The current value of the sequence.
      */
-    public long get()
-    {
+    public long get() {
         return value;
     }
 

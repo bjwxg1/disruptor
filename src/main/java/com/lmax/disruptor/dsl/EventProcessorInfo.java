@@ -36,9 +36,7 @@ class EventProcessorInfo<T> implements ConsumerInfo
     private final SequenceBarrier barrier;
     private boolean endOfChain = true;
 
-    EventProcessorInfo(
-        final EventProcessor eventprocessor, final EventHandler<? super T> handler, final SequenceBarrier barrier)
-    {
+    EventProcessorInfo(final EventProcessor eventprocessor, final EventHandler<? super T> handler, final SequenceBarrier barrier) {
         this.eventprocessor = eventprocessor;
         this.handler = handler;
         this.barrier = barrier;

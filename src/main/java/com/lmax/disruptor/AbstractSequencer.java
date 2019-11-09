@@ -25,8 +25,7 @@ import com.lmax.disruptor.util.Util;
  * common functionality like the management of gating sequences (add/remove) and
  * ownership of the current cursor.
  */
-public abstract class AbstractSequencer implements Sequencer
-{
+public abstract class AbstractSequencer implements Sequencer {
     private static final AtomicReferenceFieldUpdater<AbstractSequencer, Sequence[]> SEQUENCE_UPDATER =
         AtomicReferenceFieldUpdater.newUpdater(AbstractSequencer.class, Sequence[].class, "gatingSequences");
     //Ringbuffer 大小

@@ -56,8 +56,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *
  * @param <T> the type of event used.
  */
-public class Disruptor<T>
-{
+public class Disruptor<T> {
     //RingBuffer
     private final RingBuffer<T> ringBuffer;
     //消费者线程池
@@ -237,8 +236,7 @@ public class Disruptor<T>
      */
     @SafeVarargs
     @SuppressWarnings("varargs")
-    public final EventHandlerGroup<T> handleEventsWithWorkerPool(final WorkHandler<T>... workHandlers)
-    {
+    public final EventHandlerGroup<T> handleEventsWithWorkerPool(final WorkHandler<T>... workHandlers) {
         return createWorkerPool(new Sequence[0], workHandlers);
     }
 
@@ -250,8 +248,7 @@ public class Disruptor<T>
      * @param exceptionHandler the exception handler to use for any future {@link EventProcessor}.
      * @deprecated This method only applies to future event handlers. Use setDefaultExceptionHandler instead which applies to existing and new event handlers.
      */
-    public void handleExceptionsWith(final ExceptionHandler<? super T> exceptionHandler)
-    {
+    public void handleExceptionsWith(final ExceptionHandler<? super T> exceptionHandler) {
         this.exceptionHandler = exceptionHandler;
     }
 
@@ -300,8 +297,7 @@ public class Disruptor<T>
     public final EventHandlerGroup<T> after(final EventHandler<T>... handlers)
     {
         final Sequence[] sequences = new Sequence[handlers.length];
-        for (int i = 0, handlersLength = handlers.length; i < handlersLength; i++)
-        {
+        for (int i = 0, handlersLength = handlers.length; i < handlersLength; i++) {
             sequences[i] = consumerRepository.getSequenceFor(handlers[i]);
         }
 
@@ -400,11 +396,9 @@ public class Disruptor<T>
      *
      * @return the configured ring buffer.
      */
-    public RingBuffer<T> start()
-    {
+    public RingBuffer<T> start() {
         checkOnlyStartedOnce();
-        for (final ConsumerInfo consumerInfo : consumerRepository)
-        {
+        for (final ConsumerInfo consumerInfo : consumerRepository) {
             consumerInfo.start(executor);
         }
 
@@ -414,10 +408,8 @@ public class Disruptor<T>
     /**
      * Calls {@link com.lmax.disruptor.EventProcessor#halt()} on all of the event processors created via this disruptor.
      */
-    public void halt()
-    {
-        for (final ConsumerInfo consumerInfo : consumerRepository)
-        {
+    public void halt() {
+        for (final ConsumerInfo consumerInfo : consumerRepository) {
             consumerInfo.halt();
         }
     }
@@ -430,14 +422,10 @@ public class Disruptor<T>
      * <p>This method will not shutdown the executor, nor will it await the final termination of the
      * processor threads.</p>
      */
-    public void shutdown()
-    {
-        try
-        {
+    public void shutdown() {
+        try {
             shutdown(-1, TimeUnit.MILLISECONDS);
-        }
-        catch (final TimeoutException e)
-        {
+        } catch (final TimeoutException e) {
             exceptionHandler.handleOnShutdownException(e);
         }
     }
@@ -453,13 +441,10 @@ public class Disruptor<T>
      * @param timeUnit the unit the timeOut is specified in
      * @throws TimeoutException if a timeout occurs before shutdown completes.
      */
-    public void shutdown(final long timeout, final TimeUnit timeUnit) throws TimeoutException
-    {
+    public void shutdown(final long timeout, final TimeUnit timeUnit) throws TimeoutException {
         final long timeOutAt = System.currentTimeMillis() + timeUnit.toMillis(timeout);
-        while (hasBacklog())
-        {
-            if (timeout >= 0 && System.currentTimeMillis() > timeOutAt)
-            {
+        while (hasBacklog()) {
+            if (timeout >= 0 && System.currentTimeMillis() > timeOutAt) {
                 throw TimeoutException.INSTANCE;
             }
             // Busy spin
@@ -518,8 +503,7 @@ public class Disruptor<T>
      * @param handler the handler to get the barrier for.
      * @return the SequenceBarrier used by <i>handler</i>.
      */
-    public SequenceBarrier getBarrierFor(final EventHandler<T> handler)
-    {
+    public SequenceBarrier getBarrierFor(final EventHandler<T> handler) {
         return consumerRepository.getBarrierFor(handler);
     }
 
@@ -537,13 +521,10 @@ public class Disruptor<T>
     /**
      * Confirms if all messages have been consumed by all event processors
      */
-    private boolean hasBacklog()
-    {
+    private boolean hasBacklog() {
         final long cursor = ringBuffer.getCursor();
-        for (final Sequence consumer : consumerRepository.getLastSequenceInChain(false))
-        {
-            if (cursor > consumer.get())
-            {
+        for (final Sequence consumer : consumerRepository.getLastSequenceInChain(false)) {
+            if (cursor > consumer.get()) {
                 return true;
             }
         }
@@ -554,28 +535,31 @@ public class Disruptor<T>
         final Sequence[] barrierSequences,
         final EventHandler<? super T>[] eventHandlers)
     {
+        //Disruptor启动检验，如果已经启动抛出异常
         checkNotStarted();
 
         final Sequence[] processorSequences = new Sequence[eventHandlers.length];
+        //创建一个SequenceBarrier
         final SequenceBarrier barrier = ringBuffer.newBarrier(barrierSequences);
 
-        for (int i = 0, eventHandlersLength = eventHandlers.length; i < eventHandlersLength; i++)
-        {
+        //遍历EventHandler，为每一个EventHandler创建一个EventProcessor【BatchEventProcessor】
+        for (int i = 0, eventHandlersLength = eventHandlers.length; i < eventHandlersLength; i++) {
             final EventHandler<? super T> eventHandler = eventHandlers[i];
-
             final BatchEventProcessor<T> batchEventProcessor = new BatchEventProcessor<>(ringBuffer, barrier, eventHandler);
-
-            if (exceptionHandler != null)
-            {
+            //为EventProcessor设置exceptionHandler
+            if (exceptionHandler != null) {
                 batchEventProcessor.setExceptionHandler(exceptionHandler);
             }
 
+            //添加Processor信息到consumerRepository
             consumerRepository.add(batchEventProcessor, eventHandler, barrier);
             processorSequences[i] = batchEventProcessor.getSequence();
         }
 
+        //修改Sequencer中的gatingSequences序列，并设置和barrierSequences中Sequence相关联的ConsumerInfo的endOfChain标识为false
         updateGatingSequencesForNextInChain(barrierSequences, processorSequences);
 
+        //返回EventHandlerGroup
         return new EventHandlerGroup<>(this, consumerRepository, processorSequences);
     }
 
@@ -628,17 +612,14 @@ public class Disruptor<T>
         }
     }
 
-    private void checkOnlyStartedOnce()
-    {
-        if (!started.compareAndSet(false, true))
-        {
+    private void checkOnlyStartedOnce() {
+        if (!started.compareAndSet(false, true)) {
             throw new IllegalStateException("Disruptor.start() must only be called once.");
         }
     }
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return "Disruptor{" +
             "ringBuffer=" + ringBuffer +
             ", started=" + started +

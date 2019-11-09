@@ -47,8 +47,7 @@ public final class SequenceGroup extends Sequence
      * @return the minimum sequence value for the group.
      */
     @Override
-    public long get()
-    {
+    public long get() {
         return Util.getMinimumSequence(sequences);
     }
 

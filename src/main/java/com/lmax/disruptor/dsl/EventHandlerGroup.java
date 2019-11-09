@@ -28,8 +28,7 @@ import java.util.Arrays;
  *
  * @param <T> the type of entry used by the event processors.
  */
-public class EventHandlerGroup<T>
-{
+public class EventHandlerGroup<T> {
     private final Disruptor<T> disruptor;
     private final ConsumerRepository<T> consumerRepository;
     private final Sequence[] sequences;
@@ -37,8 +36,7 @@ public class EventHandlerGroup<T>
     EventHandlerGroup(
         final Disruptor<T> disruptor,
         final ConsumerRepository<T> consumerRepository,
-        final Sequence[] sequences)
-    {
+        final Sequence[] sequences) {
         this.disruptor = disruptor;
         this.consumerRepository = consumerRepository;
         this.sequences = Arrays.copyOf(sequences, sequences.length);
@@ -50,8 +48,7 @@ public class EventHandlerGroup<T>
      * @param otherHandlerGroup the event handler group to combine.
      * @return a new EventHandlerGroup combining the existing and new consumers into a single dependency group.
      */
-    public EventHandlerGroup<T> and(final EventHandlerGroup<T> otherHandlerGroup)
-    {
+    public EventHandlerGroup<T> and(final EventHandlerGroup<T> otherHandlerGroup) {
         final Sequence[] combinedSequences = new Sequence[this.sequences.length + otherHandlerGroup.sequences.length];
         System.arraycopy(this.sequences, 0, combinedSequences, 0, this.sequences.length);
         System.arraycopy(
@@ -66,8 +63,7 @@ public class EventHandlerGroup<T>
      * @param processors the processors to combine.
      * @return a new EventHandlerGroup combining the existing and new processors into a single dependency group.
      */
-    public EventHandlerGroup<T> and(final EventProcessor... processors)
-    {
+    public EventHandlerGroup<T> and(final EventProcessor... processors) {
         Sequence[] combinedSequences = new Sequence[sequences.length + processors.length];
 
         for (int i = 0; i < processors.length; i++)

@@ -29,17 +29,13 @@ public final class BlockingWaitStrategy implements WaitStrategy
 
     @Override
     public long waitFor(long sequence, Sequence cursorSequence, Sequence dependentSequence, SequenceBarrier barrier)
-        throws AlertException, InterruptedException
-    {
+        throws AlertException, InterruptedException {
         long availableSequence;
         //如果生产者的游标小于sequence，循环等待
-        if (cursorSequence.get() < sequence)
-        {
-            synchronized (mutex)
-            {
+        if (cursorSequence.get() < sequence) {
+            synchronized (mutex) {
                 //循环校验，防止错误唤醒
-                while (cursorSequence.get() < sequence)
-                {
+                while (cursorSequence.get() < sequence) {
                     barrier.checkAlert();
                     //循环等待，在Sequencer中publish进行唤醒；等待消费时也会在循环中定时唤醒。
                     //循环等待的原因，是要检查alert状态。如果不检查将导致不能关闭Disruptor。
@@ -52,8 +48,7 @@ public final class BlockingWaitStrategy implements WaitStrategy
         //给定序号大于上一个消费者组最慢消费者（如当前消费者为第一组则和生产者游标序号比较）序号时，需要等待。不能超前消费上一个消费者组未消费完毕的事件。
         //那么为什么这里没有锁呢？可以想一下此时的场景，代码运行至此，已能保证生产者有新事件，如果进入循环，说明上一组消费者还未消费完毕。
         //而通常我们的消费者都是较快完成任务的，所以这里才会考虑使用Busy Spin的方式等待上一组消费者完成消费
-        while ((availableSequence = dependentSequence.get()) < sequence)
-        {
+        while ((availableSequence = dependentSequence.get()) < sequence) {
             barrier.checkAlert();
             ThreadHints.onSpinWait();
         }
@@ -62,17 +57,14 @@ public final class BlockingWaitStrategy implements WaitStrategy
     }
 
     @Override
-    public void signalAllWhenBlocking()
-    {
-        synchronized (mutex)
-        {
+    public void signalAllWhenBlocking() {
+        synchronized (mutex) {
             mutex.notifyAll();
         }
     }
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return "BlockingWaitStrategy{" +
             "mutex=" + mutex +
             '}';
