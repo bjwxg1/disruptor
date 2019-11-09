@@ -57,8 +57,7 @@ public final class SequenceGroup extends Sequence
      * @param value to set the group of sequences to.
      */
     @Override
-    public void set(final long value)
-    {
+    public void set(final long value) {
         final Sequence[] sequences = this.sequences;
         for (Sequence sequence : sequences)
         {
