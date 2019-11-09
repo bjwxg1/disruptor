@@ -127,10 +127,10 @@ public final class SingleProducerSequencer extends SingleProducerSequencerFields
         long nextValue = this.nextValue;
         //本次需要申请的Sequence
         long nextSequence = nextValue + n;
-        //因为Ringbuffer使用环形缓冲，所以计算可能产生环绕的点：nextSequence - bufferSize
+        //因为RingBuffer使用环形缓冲，所以计算可能产生环绕的点：nextSequence - bufferSize
         long wrapPoint = nextSequence - bufferSize;
         long cachedGatingSequence = this.cachedValue;
-        //wrapPoint等于cachedGatingSequence将发生绕环行为，producer将在ringbuffer上，从后方覆盖未消费的事件。
+        //wrapPoint等于cachedGatingSequence将发生绕环行为，producer将在RingBuffer上，从后方覆盖未消费的事件。
         //此处是防止producer覆盖消费者的核心
         if (wrapPoint > cachedGatingSequence || cachedGatingSequence > nextValue)
         {

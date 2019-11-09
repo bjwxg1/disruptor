@@ -20,7 +20,9 @@ package com.lmax.disruptor;
  */
 
 /**
- * producer和ringbuffer之间的桥梁。Sequencer用于向Ringbuffer申请空间，使用publish方法通过WaitStrategy通知所有在等待可消费事件的SequenceBarrier。
+ * producer和Producer之间的桥梁【PS：Sequencer不仅仅是Producer到RingBuffer的桥梁，还是Consumer到RingBuffer的桥梁。
+ * Sequencer中的cursor属性，标记了生成者的生产位置，gatingSequences标记了所有消费者的消费位置(如果消费者存在依赖树，则是依赖关系最底层的消费者消费位移)，
+ * 通过cursor属性和gatingSequences就可以判断RingBuffer中是否有空间用于生产者写入和消费者消费了】。
  * SingleProducerSequencer：用于对应单生产者
  * MultiProducerSequencer：用于对应多生产者
  */

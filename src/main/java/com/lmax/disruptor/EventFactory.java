@@ -20,7 +20,8 @@ package com.lmax.disruptor;
  *
  * @param <T> event implementation storing the data for sharing during exchange or parallel coordination of an event.
  */
-//RingBuffer中的事件工厂
+//事件工厂创建RingBuffer中存放的Entry对象，在RingBuffer创建初时，
+//会对objcet[]数组进行预填充，预填充使用的对象使用该工程方法创建
 public interface EventFactory<T>
 {
     /*

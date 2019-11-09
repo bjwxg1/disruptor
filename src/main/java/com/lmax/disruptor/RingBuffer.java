@@ -28,7 +28,6 @@ abstract class RingBufferPad
 
 abstract class RingBufferFields<E> extends RingBufferPad
 {
-    //TODO 这几个参数是干嘛
     //用于在数组中进行缓存行填充的空元素个数
     private static final int BUFFER_PAD;
     //内存中引用数组的开始元素基地址，是数组开始的地址+BUFFER_PAD个元素的偏移量之和，后续元素的内存地址需要在此基础计算地址
@@ -66,7 +65,7 @@ abstract class RingBufferFields<E> extends RingBufferPad
     //存放entry的数组
     private final Object[] entries;
     protected final int bufferSize;
-    //Sequencer 生产者需要
+    //Sequencer【记录生产者的生产位置和消费位置】
     protected final Sequencer sequencer;
 
     RingBufferFields(
@@ -250,6 +249,7 @@ public final class RingBuffer<E> extends RingBufferFields<E> implements Cursored
      * @return the event for the given sequence
      */
     @Override
+    //获取给定位置的元素
     public E get(long sequence)
     {
         return elementAt(sequence);
@@ -429,6 +429,7 @@ public final class RingBuffer<E> extends RingBufferFields<E> implements Cursored
      * @param gatingSequences to be gated on.
      * @return A poller that will gate on this ring buffer and the supplied sequences.
      */
+    //TODO
     public EventPoller<E> newPoller(Sequence... gatingSequences)
     {
         return sequencer.newPoller(this, gatingSequences);

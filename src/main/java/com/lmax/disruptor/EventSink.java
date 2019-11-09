@@ -1,5 +1,8 @@
 package com.lmax.disruptor;
 
+/**
+ *主要用来发布Event，在发布的同时，调用绑定Translator来初始化并填充Event
+ */
 public interface EventSink<E>
 {
     /**
@@ -10,6 +13,7 @@ public interface EventSink<E>
      *
      * @param translator The user specified translation for the event
      */
+    //发布一个Event事件，在发布前需要使用translator填充RingBuffer中的数据
     void publishEvent(EventTranslator<E> translator);
 
     /**
@@ -23,6 +27,8 @@ public interface EventSink<E>
      * @return true if the value was published, false if there was insufficient
      * capacity.
      */
+    //发布一个Event事件，在发布前需要使用translator填充RingBuffer中的数据
+    //和publish方法类似，该方法不会阻塞
     boolean tryPublishEvent(EventTranslator<E> translator);
 
     /**
@@ -136,6 +142,7 @@ public interface EventSink<E>
      *
      * @param translators The user specified translation for each event
      */
+    //和publishEvent方法类似，不过该方法一次填充多个RingBuffer中的数据
     void publishEvents(EventTranslator<E>[] translators);
 
     /**
