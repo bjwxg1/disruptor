@@ -30,8 +30,7 @@ import com.lmax.disruptor.util.Util;
  * to {@link Sequencer#next()}, to determine the highest available sequence that can be read, then
  * {@link Sequencer#getHighestPublishedSequence(long, long)} should be used.</p>
  */
-public final class MultiProducerSequencer extends AbstractSequencer
-{
+public final class MultiProducerSequencer extends AbstractSequencer {
     private static final Unsafe UNSAFE = Util.getUnsafe();
     private static final long BASE = UNSAFE.arrayBaseOffset(int[].class);
     private static final long SCALE = UNSAFE.arrayIndexScale(int[].class);
@@ -100,8 +99,7 @@ public final class MultiProducerSequencer extends AbstractSequencer
      * @see Sequencer#next()
      */
     @Override
-    public long next()
-    {
+    public long next() {
         return next(1);
     }
 
@@ -109,43 +107,36 @@ public final class MultiProducerSequencer extends AbstractSequencer
      * @see Sequencer#next(int)
      */
     @Override
-    public long next(int n)
-    {
-        if (n < 1)
-        {
+    public long next(int n) {
+        if (n < 1) {
             throw new IllegalArgumentException("n must be > 0");
         }
 
         long current;
         long next;
 
-        do
-        {
+        do {
             current = cursor.get();
             next = current + n;
 
             long wrapPoint = next - bufferSize;
             long cachedGatingSequence = gatingSequenceCache.get();
 
-            if (wrapPoint > cachedGatingSequence || cachedGatingSequence > current)
-            {
+            if (wrapPoint > cachedGatingSequence || cachedGatingSequence > current) {
                 long gatingSequence = Util.getMinimumSequence(gatingSequences, current);
 
-                if (wrapPoint > gatingSequence)
-                {
+                if (wrapPoint > gatingSequence) {
                     LockSupport.parkNanos(1); // TODO, should we spin based on the wait strategy?
                     continue;
                 }
 
                 gatingSequenceCache.set(gatingSequence);
             }
-            else if (cursor.compareAndSet(current, next))
-            {
+            else if (cursor.compareAndSet(current, next)) {
                 break;
             }
         }
         while (true);
-
         return next;
     }
 

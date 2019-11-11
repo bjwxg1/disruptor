@@ -15,8 +15,7 @@ public class LiteTimeoutBlockingWaitStrategy implements WaitStrategy
     private final AtomicBoolean signalNeeded = new AtomicBoolean(false);
     private final long timeoutInNanos;
 
-    public LiteTimeoutBlockingWaitStrategy(final long timeout, final TimeUnit units)
-    {
+    public LiteTimeoutBlockingWaitStrategy(final long timeout, final TimeUnit units) {
         timeoutInNanos = units.toNanos(timeout);
     }
 
@@ -26,31 +25,25 @@ public class LiteTimeoutBlockingWaitStrategy implements WaitStrategy
         final Sequence cursorSequence,
         final Sequence dependentSequence,
         final SequenceBarrier barrier)
-        throws AlertException, InterruptedException, TimeoutException
-    {
+        throws AlertException, InterruptedException, TimeoutException {
         long nanos = timeoutInNanos;
 
         long availableSequence;
-        if (cursorSequence.get() < sequence)
-        {
-            synchronized (mutex)
-            {
-                while (cursorSequence.get() < sequence)
-                {
+        if (cursorSequence.get() < sequence) {
+            synchronized (mutex) {
+                while (cursorSequence.get() < sequence) {
                     signalNeeded.getAndSet(true);
 
                     barrier.checkAlert();
                     nanos = awaitNanos(mutex, nanos);
-                    if (nanos <= 0)
-                    {
+                    if (nanos <= 0) {
                         throw TimeoutException.INSTANCE;
                     }
                 }
             }
         }
 
-        while ((availableSequence = dependentSequence.get()) < sequence)
-        {
+        while ((availableSequence = dependentSequence.get()) < sequence) {
             barrier.checkAlert();
         }
 
@@ -70,8 +63,7 @@ public class LiteTimeoutBlockingWaitStrategy implements WaitStrategy
     }
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return "LiteTimeoutBlockingWaitStrategy{" +
             "mutex=" + mutex +
             ", signalNeeded=" + signalNeeded +

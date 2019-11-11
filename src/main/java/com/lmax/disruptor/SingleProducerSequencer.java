@@ -132,15 +132,13 @@ public final class SingleProducerSequencer extends SingleProducerSequencerFields
         long cachedGatingSequence = this.cachedValue;
         //wrapPoint等于cachedGatingSequence将发生绕环行为，producer将在ringbuffer上，从后方覆盖未消费的事件。
         //此处是防止producer覆盖消费者的核心
-        if (wrapPoint > cachedGatingSequence || cachedGatingSequence > nextValue)
-        {
+        if (wrapPoint > cachedGatingSequence || cachedGatingSequence > nextValue) {
             //TODO
             cursor.setVolatile(nextValue);  // StoreLoad fence
 
             //自选等待，直到不会出现覆盖位置
             long minSequence;
-            while (wrapPoint > (minSequence = Util.getMinimumSequence(gatingSequences, nextValue)))
-            {
+            while (wrapPoint > (minSequence = Util.getMinimumSequence(gatingSequences, nextValue))) {
                 LockSupport.parkNanos(1L); // TODO: Use waitStrategy to spin?
             }
 

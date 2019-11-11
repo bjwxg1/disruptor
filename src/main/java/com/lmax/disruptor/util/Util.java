@@ -140,15 +140,13 @@ public final class Util
         return r;
     }
 
-    public static long awaitNanos(Object mutex, long timeoutNanos) throws InterruptedException
-    {
+    public static long awaitNanos(Object mutex, long timeoutNanos) throws InterruptedException {
         long millis = timeoutNanos / 1_000_000;
         long nanos = timeoutNanos % 1_000_000;
 
         long t0 = System.nanoTime();
         mutex.wait(millis, (int) nanos);
         long t1 = System.nanoTime();
-
         return timeoutNanos - (t1 - t0);
     }
 }

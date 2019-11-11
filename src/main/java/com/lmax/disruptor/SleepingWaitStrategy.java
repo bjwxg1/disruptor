@@ -28,8 +28,7 @@ import java.util.concurrent.locks.LockSupport;
  * on the producing thread as it will not need signal any conditional variables
  * to wake up the event handling thread.
  */
-public final class SleepingWaitStrategy implements WaitStrategy
-{
+public final class SleepingWaitStrategy implements WaitStrategy {
     private static final int DEFAULT_RETRIES = 200;
     private static final long DEFAULT_SLEEP = 100;
 
