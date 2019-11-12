@@ -15,23 +15,22 @@
  */
 package com.lmax.disruptor;
 
+import com.lmax.disruptor.util.Util;
 import sun.misc.Unsafe;
 
-import com.lmax.disruptor.util.Util;
 
-
-class LhsPadding
-{
+class LhsPadding {
+    //value值的左填充，共7个long类型变量，占用8*7bytes
     protected long p1, p2, p3, p4, p5, p6, p7;
 }
 
-class Value extends LhsPadding
-{
+class Value extends LhsPadding {
+    //Sequence内维护的变量
     protected volatile long value;
 }
 
-class RhsPadding extends Value
-{
+class RhsPadding extends Value {
+    //value值的右填充，共7个long类型变量，占用8*7bytes
     protected long p9, p10, p11, p12, p13, p14, p15;
 }
 
@@ -45,26 +44,21 @@ class RhsPadding extends Value
  */
 
 /**
- * 采用cache line填充的方式对long类型的包装，用于代表事件的序列号。
+ * 采用cache line填充的方式对long类型的包装，用于记录的序列号。
  * 并发的Sequence，用于跟踪Ringbuffer中的任务变化和消费者的消费情况,生产和消费程序都有Sequence，记录生产和消费程序的序列
  */
-public class Sequence extends RhsPadding
-{
+public class Sequence extends RhsPadding {
     //Sequence的默认初始值
     static final long INITIAL_VALUE = -1L;
     private static final Unsafe UNSAFE;
+    //记录value的偏移量
     private static final long VALUE_OFFSET;
-
-    static
-    {
+    static {
         UNSAFE = Util.getUnsafe();
-        try
-        {
+        try {
             //获取value字段的起始地址偏移量
             VALUE_OFFSET = UNSAFE.objectFieldOffset(Value.class.getDeclaredField("value"));
-        }
-        catch (final Exception e)
-        {
+        } catch (final Exception e) {
             throw new RuntimeException(e);
         }
     }
@@ -103,8 +97,9 @@ public class Sequence extends RhsPadding
      *
      * @param value The new value for the sequence.
      */
-    public void set(final long value)
-    {
+    public void set(final long value) {
+        //UNSAFE.putOrderedLong设置变量，不保证可见性，
+        //但是字段用volatile修饰时和UNSAFE.putLongVolatile效果一样可以确保其可见性
         UNSAFE.putOrderedLong(this, VALUE_OFFSET, value);
     }
 
@@ -116,8 +111,7 @@ public class Sequence extends RhsPadding
      *
      * @param value The new value for the sequence.
      */
-    public void setVolatile(final long value)
-    {
+    public void setVolatile(final long value) {
         UNSAFE.putLongVolatile(this, VALUE_OFFSET, value);
     }
 
@@ -128,8 +122,7 @@ public class Sequence extends RhsPadding
      * @param newValue The value to update to.
      * @return true if the operation succeeds, false otherwise.
      */
-    public boolean compareAndSet(final long expectedValue, final long newValue)
-    {
+    public boolean compareAndSet(final long expectedValue, final long newValue) {
         return UNSAFE.compareAndSwapLong(this, VALUE_OFFSET, expectedValue, newValue);
     }
 
@@ -149,18 +142,14 @@ public class Sequence extends RhsPadding
      * @param increment The value to add to the sequence.
      * @return The value after the increment.
      */
-    public long addAndGet(final long increment)
-    {
+    public long addAndGet(final long increment) {
         long currentValue;
         long newValue;
-
-        do
-        {
+        do {
             currentValue = get();
             newValue = currentValue + increment;
         }
         while (!compareAndSet(currentValue, newValue));
-
         return newValue;
     }
 
