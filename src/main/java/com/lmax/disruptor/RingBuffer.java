@@ -26,8 +26,7 @@ abstract class RingBufferPad
     protected long p1, p2, p3, p4, p5, p6, p7;
 }
 
-abstract class RingBufferFields<E> extends RingBufferPad
-{
+abstract class RingBufferFields<E> extends RingBufferPad {
     //用于在数组中进行缓存行填充的空元素个数
     private static final int BUFFER_PAD;
     //内存中引用数组的开始元素基地址，是数组开始的地址+BUFFER_PAD个元素的偏移量之和，后续元素的内存地址需要在此基础计算地址
@@ -36,23 +35,16 @@ abstract class RingBufferFields<E> extends RingBufferPad
     private static final int REF_ELEMENT_SHIFT;
     private static final Unsafe UNSAFE = Util.getUnsafe();
 
-    static
-    {
+    static {
         //arrayIndexScale获取数组中一个元素占用的字节数，不同JVM实现可能有不同的大小
         final int scale = UNSAFE.arrayIndexScale(Object[].class);
-        if (4 == scale)
-        {
+        if (4 == scale) {
             REF_ELEMENT_SHIFT = 2;
-        }
-        else if (8 == scale)
-        {
+        } else if (8 == scale) {
             REF_ELEMENT_SHIFT = 3;
-        }
-        else
-        {
+        } else {
             throw new IllegalStateException("Unknown pointer size");
         }
-        // TODO
         // BUFFER_PAD=32 or 16，为什么是128呢？是为了满足处理器的缓存行预取功能(Adjacent Cache-Line Prefetch)
         BUFFER_PAD = 128 / scale;
         // Including the buffer pad in the array base offset
@@ -68,20 +60,15 @@ abstract class RingBufferFields<E> extends RingBufferPad
     //Sequencer【记录生产者的生产位置和消费位置】
     protected final Sequencer sequencer;
 
-    RingBufferFields(
-        EventFactory<E> eventFactory,
-        Sequencer sequencer)
-    {
+    RingBufferFields(EventFactory<E> eventFactory, Sequencer sequencer) {
         this.sequencer = sequencer;
         this.bufferSize = sequencer.getBufferSize();
 
-        if (bufferSize < 1)
-        {
+        if (bufferSize < 1) {
             throw new IllegalArgumentException("bufferSize must not be less than 1");
         }
         //保证bufferSize是2的N次方
-        if (Integer.bitCount(bufferSize) != 1)
-        {
+        if (Integer.bitCount(bufferSize) != 1) {
             throw new IllegalArgumentException("bufferSize must be a power of 2");
         }
 
@@ -93,17 +80,14 @@ abstract class RingBufferFields<E> extends RingBufferPad
         fill(eventFactory);
     }
 
-    private void fill(EventFactory<E> eventFactory)
-    {
-        for (int i = 0; i < bufferSize; i++)
-        {
+    private void fill(EventFactory<E> eventFactory) {
+        for (int i = 0; i < bufferSize; i++) {
             entries[BUFFER_PAD + i] = eventFactory.newInstance();
         }
     }
 
     @SuppressWarnings("unchecked")
-    protected final E elementAt(long sequence)
-    {
+    protected final E elementAt(long sequence) {
         return (E) UNSAFE.getObject(entries, REF_ARRAY_BASE + ((sequence & indexMask) << REF_ELEMENT_SHIFT));
     }
 }
