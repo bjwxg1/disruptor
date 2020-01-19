@@ -9,7 +9,6 @@ import java.util.concurrent.ThreadFactory;
  */
 public class MsgThreadFactory implements ThreadFactory {
     private static final String DEFAULT_NAME_PRIFIX = "msg_event_thread";
-
     @Override
     public Thread newThread(Runnable r) {
         return new Thread(r, DEFAULT_NAME_PRIFIX);

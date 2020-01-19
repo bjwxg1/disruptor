@@ -9,11 +9,9 @@ import com.lmax.disruptor.RingBuffer;
  */
 public class MsgEventProducer {
     private RingBuffer<MsgEvent> ringBuffer;
-
     public MsgEventProducer(RingBuffer<MsgEvent> ringBuffer) {
         this.ringBuffer = ringBuffer;
     }
-
     /**
      * 将接收到的消息输出到ringBuffer
      */

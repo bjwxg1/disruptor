@@ -20,8 +20,9 @@ package com.lmax.disruptor;
  */
 
 /**
- * producer和Producer之间的桥梁【PS：Sequencer不仅仅是Producer到RingBuffer的桥梁，还是Consumer到RingBuffer的桥梁。
- * Sequencer中的cursor属性，标记了生成者的生产位置，gatingSequences标记了所有消费者的消费位置(如果消费者存在依赖树，则是依赖关系最底层的消费者消费位移)，
+ * Sequencer不仅仅是Producer到RingBuffer的桥梁，还是Consumer到RingBuffer的桥梁。
+ * Sequencer中的cursor属性，标记了生产者的生产位置；
+ * gatingSequences标记了所有消费者的消费位置(如果消费者存在依赖树，则是依赖关系最底层的消费者消费位移)，
  * 通过cursor属性和gatingSequences就可以判断RingBuffer中是否有空间用于生产者写入和消费者消费了】。
  * SingleProducerSequencer：用于对应单生产者
  * MultiProducerSequencer：用于对应多生产者
@@ -46,7 +47,7 @@ public interface Sequencer extends Cursored, Sequenced {
      * @param sequence of the buffer to check
      * @return true if the sequence is available for use, false if not
      */
-    //非阻塞，用于确认某个需要是否已经发布且事件是否可用
+    //非阻塞，用于确认某个sequence是否已经发布且事件是否可用
     boolean isAvailable(long sequence);
 
     /**
@@ -55,7 +56,7 @@ public interface Sequencer extends Cursored, Sequenced {
      *
      * @param gatingSequences The sequences to add.
      */
-    //增加门控序列（消费者序列），用于生产者在生产者在生产时避免追尾消费者
+    //增加门控序列（消费者序列），用于生产者在生产时避免追尾消费者
     void addGatingSequences(Sequence... gatingSequences);
 
     /**
@@ -75,7 +76,7 @@ public interface Sequencer extends Cursored, Sequenced {
      * @return A sequence barrier that will track the specified sequences.
      * @see SequenceBarrier
      */
-    //使用给定的sequencesToTrack来创建SequenceBarrier，消费者使用SequenceBarrier来追踪Ringbuffer中可以读的序列
+    //使用给定的sequencesToTrack来创建SequenceBarrier，消费者使用SequenceBarrier来追踪RingBuffer中可以读的序列
     SequenceBarrier newBarrier(Sequence... sequencesToTrack);
 
     /**

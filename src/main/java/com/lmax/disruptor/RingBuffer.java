@@ -257,8 +257,7 @@ public final class RingBuffer<E> extends RingBufferFields<E> implements Cursored
      * @see RingBuffer#get(long)
      */
     @Override
-    public long next()
-    {
+    public long next() {
         return sequencer.next();
     }
 
@@ -489,11 +488,10 @@ public final class RingBuffer<E> extends RingBufferFields<E> implements Cursored
      * com.lmax.disruptor.EventSink#publishEvent(com.lmax.disruptor.EventTranslatorOneArg, A)
      */
     @Override
-    public <A> void publishEvent(EventTranslatorOneArg<E, A> translator, A arg0)
-    {
-        //占用ringbuffer上一个可以写入的位置【并没有进行数据的写入】
+    public <A> void publishEvent(EventTranslatorOneArg<E, A> translator, A arg0) {
+        //占用RingBuffer上一个可以写入的位置【并没有进行数据的写入】
         final long sequence = sequencer.next();
-        //在可用的位置写入数据，并pushlish时间【RingBuffer在初始化时已经初始化了Entry数组，覆盖Entry属性集合】
+        //在可用的位置写入数据，并publish事件【RingBuffer在初始化时已经初始化了Entry数组，覆盖Entry属性集合】
         translateAndPublish(translator, sequence, arg0);
     }
 
@@ -502,16 +500,13 @@ public final class RingBuffer<E> extends RingBufferFields<E> implements Cursored
      * com.lmax.disruptor.EventSink#tryPublishEvent(com.lmax.disruptor.EventTranslatorOneArg, A)
      */
     @Override
-    public <A> boolean tryPublishEvent(EventTranslatorOneArg<E, A> translator, A arg0)
-    {
-        try
-        {
+    public <A> boolean tryPublishEvent(EventTranslatorOneArg<E, A> translator, A arg0) {
+        try {
             final long sequence = sequencer.tryNext();
             translateAndPublish(translator, sequence, arg0);
             return true;
         }
-        catch (InsufficientCapacityException e)
-        {
+        catch (InsufficientCapacityException e) {
             return false;
         }
     }

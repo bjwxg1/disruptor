@@ -28,7 +28,7 @@ import com.lmax.disruptor.util.Util;
 public abstract class AbstractSequencer implements Sequencer {
     private static final AtomicReferenceFieldUpdater<AbstractSequencer, Sequence[]> SEQUENCE_UPDATER =
         AtomicReferenceFieldUpdater.newUpdater(AbstractSequencer.class, Sequence[].class, "gatingSequences");
-    //Ringbuffer 大小
+    //RingBuffer 大小
     protected final int bufferSize;
     //等待策略
     protected final WaitStrategy waitStrategy;
@@ -42,15 +42,12 @@ public abstract class AbstractSequencer implements Sequencer {
      * @param bufferSize   The total number of entries, must be a positive power of 2.
      * @param waitStrategy The wait strategy used by this sequencer
      */
-    public AbstractSequencer(int bufferSize, WaitStrategy waitStrategy)
-    {
-        if (bufferSize < 1)
-        {
+    public AbstractSequencer(int bufferSize, WaitStrategy waitStrategy) {
+        if (bufferSize < 1) {
             throw new IllegalArgumentException("bufferSize must not be less than 1");
         }
         //bufferSize需要是2的n次方
-        if (Integer.bitCount(bufferSize) != 1)
-        {
+        if (Integer.bitCount(bufferSize) != 1) {
             throw new IllegalArgumentException("bufferSize must be a power of 2");
         }
 
@@ -71,8 +68,7 @@ public abstract class AbstractSequencer implements Sequencer {
      * @see Sequencer#getBufferSize()
      */
     @Override
-    public final int getBufferSize()
-    {
+    public final int getBufferSize() {
         return bufferSize;
     }
 
@@ -80,8 +76,7 @@ public abstract class AbstractSequencer implements Sequencer {
      * @see Sequencer#addGatingSequences(Sequence...)
      */
     @Override
-    public final void addGatingSequences(Sequence... gatingSequences)
-    {
+    public final void addGatingSequences(Sequence... gatingSequences) {
         SequenceGroups.addSequences(this, SEQUENCE_UPDATER, this, gatingSequences);
     }
 
