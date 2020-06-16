@@ -1,7 +1,6 @@
 package com.lmax.disruptor;
 
-public interface Sequenced
-{
+public interface Sequenced {
     /**
      * The capacity of the data structure to hold entries.
      *
@@ -17,7 +16,7 @@ public interface Sequenced
      * @param requiredCapacity in the buffer
      * @return true if the buffer has the capacity to allocate the next sequence otherwise false.
      */
-    //Ringbuffer是否可用的空间来容纳requiredCapacity
+    //RingBuffer是否可用的空间来容纳requiredCapacity
     boolean hasAvailableCapacity(int requiredCapacity);
 
     /**
@@ -25,7 +24,7 @@ public interface Sequenced
      *
      * @return The number of slots remaining.
      */
-    //Ringbuffer的可用容量
+    //RingBuffer的可用容量
     long remainingCapacity();
 
     /**
@@ -33,7 +32,7 @@ public interface Sequenced
      *
      * @return the claimed sequence value
      */
-    //申请一个序列号，用于发布
+    //申请一个序列号，用于发布[阻塞]
     long next();
 
     /**
@@ -52,7 +51,7 @@ public interface Sequenced
      * @param n the number of sequences to claim
      * @return the highest claimed sequence value
      */
-    //申请n个序列号，用于批量发布
+    //申请n个序列号，用于批量发布[阻塞]
     long next(int n);
 
     /**
@@ -63,6 +62,7 @@ public interface Sequenced
      * @return the claimed sequence value
      * @throws InsufficientCapacityException thrown if there is no space available in the ring buffer.
      */
+    //尝试获取一个序号用于生产者发布数据【非阻塞】
     long tryNext() throws InsufficientCapacityException;
 
     /**
@@ -75,6 +75,7 @@ public interface Sequenced
      * @return the claimed sequence value
      * @throws InsufficientCapacityException thrown if there is no space available in the ring buffer.
      */
+    //尝试获取n个序号用于生产者发布数据【非阻塞】
     long tryNext(int n) throws InsufficientCapacityException;
 
     /**

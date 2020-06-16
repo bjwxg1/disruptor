@@ -22,8 +22,7 @@ package com.lmax.disruptor;
  * @see BatchEventProcessor#setExceptionHandler(ExceptionHandler) if you want to handle exceptions propagated out of the handler.
  */
 //事件处理的回调接口
-public interface EventHandler<T>
-{
+public interface EventHandler<T> {
     /**
      * Called when a publisher has published an event to the {@link RingBuffer}.  The {@link BatchEventProcessor} will
      * read messages from the {@link RingBuffer} in batches, where a batch is all of the events available to be

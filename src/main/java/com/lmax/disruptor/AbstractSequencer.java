@@ -32,8 +32,9 @@ public abstract class AbstractSequencer implements Sequencer {
     protected final int bufferSize;
     //等待策略
     protected final WaitStrategy waitStrategy;
-    //初始化一个Sequence
+    //初始化一个Sequence，记录生产者位置
     protected final Sequence cursor = new Sequence(Sequencer.INITIAL_CURSOR_VALUE);
+    //消费者Sequence数组
     protected volatile Sequence[] gatingSequences = new Sequence[0];
 
     /**
@@ -102,8 +103,7 @@ public abstract class AbstractSequencer implements Sequencer {
      * @see Sequencer#newBarrier(Sequence...)
      */
     @Override
-    public SequenceBarrier newBarrier(Sequence... sequencesToTrack)
-    {
+    public SequenceBarrier newBarrier(Sequence... sequencesToTrack) {
         return new ProcessingSequenceBarrier(this, waitStrategy, cursor, sequencesToTrack);
     }
 
@@ -116,14 +116,12 @@ public abstract class AbstractSequencer implements Sequencer {
      * @return A poller that will gate on this ring buffer and the supplied sequences.
      */
     @Override
-    public <T> EventPoller<T> newPoller(DataProvider<T> dataProvider, Sequence... gatingSequences)
-    {
+    public <T> EventPoller<T> newPoller(DataProvider<T> dataProvider, Sequence... gatingSequences) {
         return EventPoller.newInstance(dataProvider, this, new Sequence(), cursor, gatingSequences);
     }
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return "AbstractSequencer{" +
             "waitStrategy=" + waitStrategy +
             ", cursor=" + cursor +

@@ -22,8 +22,7 @@ package com.lmax.disruptor;
  */
 //消费者与RingBuffer的桥梁。消费者并不直接访问RingBuffer，从而能减少RingBuffer上的并发冲突
 //SequenceBarrier被EventProcessor持有，用于等待可消费的事件
-public interface SequenceBarrier
-{
+public interface SequenceBarrier {
     /**
      * Wait for the given sequence to be available for consumption.
      *

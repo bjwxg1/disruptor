@@ -26,16 +26,14 @@ import com.lmax.disruptor.util.ThreadHints;
  */
 public final class BusySpinWaitStrategy implements WaitStrategy {
     @Override
-    public long waitFor(
-        final long sequence, Sequence cursor, final Sequence dependentSequence, final SequenceBarrier barrier)
-        throws AlertException, InterruptedException {
+    public long waitFor(final long sequence, Sequence cursor, final Sequence dependentSequence,
+                        final SequenceBarrier barrier) throws AlertException, InterruptedException {
         long availableSequence;
-
         while ((availableSequence = dependentSequence.get()) < sequence) {
             barrier.checkAlert();
+            //自旋忙等待
             ThreadHints.onSpinWait();
         }
-
         return availableSequence;
     }
 

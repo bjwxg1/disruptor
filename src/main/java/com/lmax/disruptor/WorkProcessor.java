@@ -26,14 +26,17 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @param <T> event implementation storing the details for the work to processed.
  */
 public final class WorkProcessor<T> implements EventProcessor {
+    //运行标识
     private final AtomicBoolean running = new AtomicBoolean(false);
+    //记录当前WorkProcessor的消费位置
     private final Sequence sequence = new Sequence(Sequencer.INITIAL_CURSOR_VALUE);
     private final RingBuffer<T> ringBuffer;
     private final SequenceBarrier sequenceBarrier;
+    //WorkHandler进行工作处理
     private final WorkHandler<? super T> workHandler;
     private final ExceptionHandler<? super T> exceptionHandler;
+    //workSequence：处于同一个WorkerPool内的WorkProcessor共享
     private final Sequence workSequence;
-
     private final EventReleaser eventReleaser = new EventReleaser()
     {
         @Override
@@ -42,7 +45,6 @@ public final class WorkProcessor<T> implements EventProcessor {
             sequence.set(Long.MAX_VALUE);
         }
     };
-
     private final TimeoutHandler timeoutHandler;
 
     /**
@@ -55,21 +57,16 @@ public final class WorkProcessor<T> implements EventProcessor {
      * @param workSequence     from which to claim the next event to be worked on.  It should always be initialised
      *                         as {@link Sequencer#INITIAL_CURSOR_VALUE}
      */
-    public WorkProcessor(
-        final RingBuffer<T> ringBuffer,
-        final SequenceBarrier sequenceBarrier,
-        final WorkHandler<? super T> workHandler,
-        final ExceptionHandler<? super T> exceptionHandler,
-        final Sequence workSequence)
-    {
+    public WorkProcessor(final RingBuffer<T> ringBuffer, final SequenceBarrier sequenceBarrier,
+                         final WorkHandler<? super T> workHandler,
+                         final ExceptionHandler<? super T> exceptionHandler, final Sequence workSequence) {
         this.ringBuffer = ringBuffer;
         this.sequenceBarrier = sequenceBarrier;
         this.workHandler = workHandler;
         this.exceptionHandler = exceptionHandler;
         this.workSequence = workSequence;
 
-        if (this.workHandler instanceof EventReleaseAware)
-        {
+        if (this.workHandler instanceof EventReleaseAware) {
             ((EventReleaseAware) this.workHandler).setEventReleaser(eventReleaser);
         }
 
@@ -109,33 +106,33 @@ public final class WorkProcessor<T> implements EventProcessor {
         notifyStart();
         //处理标识，判断上一个获取的Event是否已经被处理，如果已经处理才会获取下一个
         boolean processedSequence = true;
-        //cachedAvailableSequence 记录可以消费的Event的offset上线
+        //cachedAvailableSequence 记录可以消费的Event的offset下限
         long cachedAvailableSequence = Long.MIN_VALUE;
         long nextSequence = sequence.get();
         T event = null;
         while (true) {
             try {
-                // if previous sequence was processed - fetch the next sequence and set
-                // that we have successfully processed the previous sequence
-                // typically, this will be true
-                // this prevents the sequence getting too far forward if an exception
-                // is thrown from the WorkHandler
+                //如果前一个元素已经被处理，尝试获取下一个
                 if (processedSequence) {
                     processedSequence = false;
                     do {
                         //这就是WorkProcessor是为什么消息队列模型的原因？【不同WorkProcessor消费不同的消息】
                         //workSequence记录了消费位移，所有的WorkProcessor公用一个workSequence来记录消费offset
                         nextSequence = workSequence.get() + 1L;
+                        //
                         sequence.set(nextSequence - 1L);
                     }
+                    //同一个WorkerPool中Processor可能会并发，通过CAS尝试多次
                     while (!workSequence.compareAndSet(nextSequence - 1L, nextSequence));
                 }
 
+                //如果存在可用的Sequence，从RingBuffer中进行获取并处理
                 if (cachedAvailableSequence >= nextSequence) {
                     event = ringBuffer.get(nextSequence);
                     workHandler.onEvent(event);
                     processedSequence = true;
                 } else {
+                    //如果不存在可用数据则进行等待
                     cachedAvailableSequence = sequenceBarrier.waitFor(nextSequence);
                 }
             } catch (final TimeoutException e) {
@@ -145,7 +142,6 @@ public final class WorkProcessor<T> implements EventProcessor {
                     break;
                 }
             } catch (final Throwable ex) {
-                // handle, mark as processed, unless the exception handler threw an exception
                 exceptionHandler.handleEventException(ex, nextSequence, event);
                 processedSequence = true;
             }

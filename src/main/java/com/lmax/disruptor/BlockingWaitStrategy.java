@@ -23,8 +23,7 @@ import com.lmax.disruptor.util.ThreadHints;
  * This strategy can be used when throughput and low-latency are not as important as CPU resource.
  */
 //阻塞等待
-public final class BlockingWaitStrategy implements WaitStrategy
-{
+public final class BlockingWaitStrategy implements WaitStrategy {
     private final Object mutex = new Object();
 
     @Override
@@ -38,21 +37,20 @@ public final class BlockingWaitStrategy implements WaitStrategy
                 while (cursorSequence.get() < sequence) {
                     barrier.checkAlert();
                     //循环等待，在Sequencer中publish进行唤醒；等待消费时也会在循环中定时唤醒。
-                    //循环等待的原因，是要检查alert状态。如果不检查将导致不能关闭Disruptor。
+                    //循环等待时要检查alert状态。如果不检查将导致不能关闭Disruptor。
                     mutex.wait();
                 }
             }
         }
-
-        //获取dependentSequence中最小的游标，判断是否小于sequence，如果小于
-        //给定序号大于上一个消费者组最慢消费者（如当前消费者为第一组则和生产者游标序号比较）序号时，需要等待。不能超前消费上一个消费者组未消费完毕的事件。
+        //获取dependentSequence中最小的游标，判断是否小于sequence，
+        //如果sequence大于上一个消费者组最慢消费者（如当前消费者为第一组则和生产者游标序号比较）序号时，需要等待。
+        //因为消费者可能存在依赖关系，所以不能消费其依赖的消费者未消费完毕的事件。
         //那么为什么这里没有锁呢？可以想一下此时的场景，代码运行至此，已能保证生产者有新事件，如果进入循环，说明上一组消费者还未消费完毕。
         //而通常我们的消费者都是较快完成任务的，所以这里才会考虑使用Busy Spin的方式等待上一组消费者完成消费
         while ((availableSequence = dependentSequence.get()) < sequence) {
             barrier.checkAlert();
             ThreadHints.onSpinWait();
         }
-
         return availableSequence;
     }
 

@@ -27,8 +27,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  *
  * @param <T> event implementation storing the data for sharing during exchange or parallel coordination of an event.
  */
-public final class BatchEventProcessor<T> implements EventProcessor
-{
+public final class BatchEventProcessor<T> implements EventProcessor {
     //
     private static final int IDLE = 0;
     private static final int HALTED = IDLE + 1;
@@ -58,24 +57,18 @@ public final class BatchEventProcessor<T> implements EventProcessor
      * @param sequenceBarrier on which it is waiting.
      * @param eventHandler    is the delegate to which events are dispatched.
      */
-    public BatchEventProcessor(
-        final DataProvider<T> dataProvider,
-        final SequenceBarrier sequenceBarrier,
-        final EventHandler<? super T> eventHandler)
-    {
+    public BatchEventProcessor(final DataProvider<T> dataProvider, final SequenceBarrier sequenceBarrier,
+        final EventHandler<? super T> eventHandler) {
         this.dataProvider = dataProvider;
         this.sequenceBarrier = sequenceBarrier;
         this.eventHandler = eventHandler;
 
-        if (eventHandler instanceof SequenceReportingEventHandler)
-        {
+        if (eventHandler instanceof SequenceReportingEventHandler) {
             ((SequenceReportingEventHandler<?>) eventHandler).setSequenceCallback(sequence);
         }
 
-        batchStartAware =
-            (eventHandler instanceof BatchStartAware) ? (BatchStartAware) eventHandler : null;
-        timeoutHandler =
-            (eventHandler instanceof TimeoutHandler) ? (TimeoutHandler) eventHandler : null;
+        batchStartAware = (eventHandler instanceof BatchStartAware) ? (BatchStartAware) eventHandler : null;
+        timeoutHandler = (eventHandler instanceof TimeoutHandler) ? (TimeoutHandler) eventHandler : null;
     }
 
     @Override
@@ -85,8 +78,7 @@ public final class BatchEventProcessor<T> implements EventProcessor
     }
 
     @Override
-    public void halt()
-    {
+    public void halt() {
         running.set(HALTED);
         sequenceBarrier.alert();
     }
@@ -102,10 +94,8 @@ public final class BatchEventProcessor<T> implements EventProcessor
      *
      * @param exceptionHandler to replace the existing exceptionHandler.
      */
-    public void setExceptionHandler(final ExceptionHandler<? super T> exceptionHandler)
-    {
-        if (null == exceptionHandler)
-        {
+    public void setExceptionHandler(final ExceptionHandler<? super T> exceptionHandler) {
+        if (null == exceptionHandler) {
             throw new NullPointerException();
         }
 
@@ -122,10 +112,10 @@ public final class BatchEventProcessor<T> implements EventProcessor
         if (running.compareAndSet(IDLE, RUNNING)) {
             //设置alert为false
             sequenceBarrier.clearAlert();
-
             notifyStart();
             try {
                 if (running.get() == RUNNING) {
+                    //核心
                     processEvents();
                 }
             }
@@ -147,15 +137,18 @@ public final class BatchEventProcessor<T> implements EventProcessor
 
     private void processEvents() {
         T event = null;
+        //下一个需要处理的位置
         long nextSequence = sequence.get() + 1L;
 
         while (true) {
             try {
+                //根据下一个要处理的位置去sequenceBarrier获取可用的Sequence
                 final long availableSequence = sequenceBarrier.waitFor(nextSequence);
                 if (batchStartAware != null) {
                     batchStartAware.onBatchStart(availableSequence - nextSequence + 1);
                 }
 
+                //循环进行处理
                 while (nextSequence <= availableSequence) {
                     event = dataProvider.get(nextSequence);
                     eventHandler.onEvent(event, nextSequence, nextSequence == availableSequence);
@@ -177,23 +170,18 @@ public final class BatchEventProcessor<T> implements EventProcessor
         }
     }
 
-    private void earlyExit()
-    {
+    private void earlyExit() {
         notifyStart();
         notifyShutdown();
     }
 
-    private void notifyTimeout(final long availableSequence)
-    {
-        try
-        {
-            if (timeoutHandler != null)
-            {
+    private void notifyTimeout(final long availableSequence) {
+        try {
+            if (timeoutHandler != null) {
                 timeoutHandler.onTimeout(availableSequence);
             }
         }
-        catch (Throwable e)
-        {
+        catch (Throwable e) {
             exceptionHandler.handleEventException(e, availableSequence, null);
         }
     }
@@ -201,16 +189,11 @@ public final class BatchEventProcessor<T> implements EventProcessor
     /**
      * Notifies the EventHandler when this processor is starting up
      */
-    private void notifyStart()
-    {
-        if (eventHandler instanceof LifecycleAware)
-        {
-            try
-            {
+    private void notifyStart() {
+        if (eventHandler instanceof LifecycleAware) {
+            try {
                 ((LifecycleAware) eventHandler).onStart();
-            }
-            catch (final Throwable ex)
-            {
+            } catch (final Throwable ex) {
                 exceptionHandler.handleOnStartException(ex);
             }
         }
@@ -219,16 +202,11 @@ public final class BatchEventProcessor<T> implements EventProcessor
     /**
      * Notifies the EventHandler immediately prior to this processor shutting down
      */
-    private void notifyShutdown()
-    {
-        if (eventHandler instanceof LifecycleAware)
-        {
-            try
-            {
+    private void notifyShutdown() {
+        if (eventHandler instanceof LifecycleAware) {
+            try {
                 ((LifecycleAware) eventHandler).onShutdown();
-            }
-            catch (final Throwable ex)
-            {
+            } catch (final Throwable ex) {
                 exceptionHandler.handleOnShutdownException(ex);
             }
         }

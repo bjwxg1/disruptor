@@ -89,8 +89,7 @@ public class EventHandlerGroup<T> {
      * @return a {@link EventHandlerGroup} that can be used to set up a event processor barrier over the created event processors.
      */
     @SafeVarargs
-    public final EventHandlerGroup<T> then(final EventHandler<? super T>... handlers)
-    {
+    public final EventHandlerGroup<T> then(final EventHandler<? super T>... handlers) {
         return handleEventsWith(handlers);
     }
 
@@ -105,8 +104,7 @@ public class EventHandlerGroup<T> {
      * @return a {@link EventHandlerGroup} that can be used to chain dependencies.
      */
     @SafeVarargs
-    public final EventHandlerGroup<T> then(final EventProcessorFactory<T>... eventProcessorFactories)
-    {
+    public final EventHandlerGroup<T> then(final EventProcessorFactory<T>... eventProcessorFactories) {
         return handleEventsWith(eventProcessorFactories);
     }
 
@@ -160,8 +158,7 @@ public class EventHandlerGroup<T> {
      * @return a {@link EventHandlerGroup} that can be used to chain dependencies.
      */
     @SafeVarargs
-    public final EventHandlerGroup<T> handleEventsWith(final EventProcessorFactory<T>... eventProcessorFactories)
-    {
+    public final EventHandlerGroup<T> handleEventsWith(final EventProcessorFactory<T>... eventProcessorFactories) {
         return disruptor.createEventProcessors(sequences, eventProcessorFactories);
     }
 

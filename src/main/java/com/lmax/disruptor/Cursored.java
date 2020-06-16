@@ -21,9 +21,8 @@ package com.lmax.disruptor;
  * add/remove of Sequences from a
  * {@link SequenceGroups#addSequences(Object, java.util.concurrent.atomic.AtomicReferenceFieldUpdater, Cursored, Sequence...)}.
  */
-//游标接口
-public interface Cursored
-{
+//游标接口，用于获取生产者的游标位置
+public interface Cursored {
     /**
      * Get the current cursor value.
      *

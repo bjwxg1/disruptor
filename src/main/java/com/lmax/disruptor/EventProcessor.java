@@ -24,8 +24,7 @@ package com.lmax.disruptor;
  * An EventProcessor will generally be associated with a Thread for execution.
  */
 //事件执行器，等待RingBuffer有可用消费事件。一个事件处理器关联一个执行线程
-public interface EventProcessor extends Runnable
-{
+public interface EventProcessor extends Runnable {
     /**
      * Get a reference to the {@link Sequence} being used by this {@link EventProcessor}.
      *
@@ -38,6 +37,5 @@ public interface EventProcessor extends Runnable
      * It will call {@link SequenceBarrier#alert()} to notify the thread to check status.
      */
     void halt();
-
     boolean isRunning();
 }

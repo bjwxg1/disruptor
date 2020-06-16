@@ -12,8 +12,7 @@ import static com.lmax.disruptor.util.Util.awaitNanos;
  * <p>
  * This strategy can be used when throughput and low-latency are not as important as CPU resource.
  */
-public class TimeoutBlockingWaitStrategy implements WaitStrategy
-{
+public class TimeoutBlockingWaitStrategy implements WaitStrategy {
     private final Object mutex = new Object();
     private final long timeoutInNanos;
 
@@ -23,45 +22,33 @@ public class TimeoutBlockingWaitStrategy implements WaitStrategy
     }
 
     @Override
-    public long waitFor(
-        final long sequence,
-        final Sequence cursorSequence,
-        final Sequence dependentSequence,
-        final SequenceBarrier barrier)
-        throws AlertException, InterruptedException, TimeoutException
-    {
+    public long waitFor(final long sequence, final Sequence cursorSequence, final Sequence dependentSequence,
+        final SequenceBarrier barrier) throws AlertException, InterruptedException, TimeoutException {
         long timeoutNanos = timeoutInNanos;
-
         long availableSequence;
-        if (cursorSequence.get() < sequence)
-        {
-            synchronized (mutex)
-            {
-                while (cursorSequence.get() < sequence)
-                {
+        if (cursorSequence.get() < sequence) {
+            synchronized (mutex) {
+                while (cursorSequence.get() < sequence) {
                     barrier.checkAlert();
+                    //超时等待
                     timeoutNanos = awaitNanos(mutex, timeoutNanos);
-                    if (timeoutNanos <= 0)
-                    {
+                    if (timeoutNanos <= 0) {
+                        //如果超时则抛出异常
                         throw TimeoutException.INSTANCE;
                     }
                 }
             }
         }
 
-        while ((availableSequence = dependentSequence.get()) < sequence)
-        {
+        while ((availableSequence = dependentSequence.get()) < sequence) {
             barrier.checkAlert();
         }
-
         return availableSequence;
     }
 
     @Override
-    public void signalAllWhenBlocking()
-    {
-        synchronized (mutex)
-        {
+    public void signalAllWhenBlocking() {
+        synchronized (mutex) {
             mutex.notifyAll();
         }
     }

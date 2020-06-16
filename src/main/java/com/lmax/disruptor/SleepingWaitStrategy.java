@@ -45,52 +45,40 @@ public final class SleepingWaitStrategy implements WaitStrategy {
         this(retries, DEFAULT_SLEEP);
     }
 
-    public SleepingWaitStrategy(int retries, long sleepTimeNs)
-    {
+    public SleepingWaitStrategy(int retries, long sleepTimeNs) {
         this.retries = retries;
         this.sleepTimeNs = sleepTimeNs;
     }
 
     @Override
-    public long waitFor(
-        final long sequence, Sequence cursor, final Sequence dependentSequence, final SequenceBarrier barrier)
-        throws AlertException
-    {
+    public long waitFor(final long sequence, Sequence cursor, final Sequence dependentSequence,
+                        final SequenceBarrier barrier) throws AlertException {
         long availableSequence;
         int counter = retries;
 
-        while ((availableSequence = dependentSequence.get()) < sequence)
-        {
+        while ((availableSequence = dependentSequence.get()) < sequence) {
             counter = applyWaitMethod(barrier, counter);
         }
 
         return availableSequence;
     }
 
-    @Override
-    public void signalAllWhenBlocking()
-    {
-    }
-
-    private int applyWaitMethod(final SequenceBarrier barrier, int counter)
-        throws AlertException
-    {
+    private int applyWaitMethod(final SequenceBarrier barrier, int counter) throws AlertException {
         barrier.checkAlert();
-
-        if (counter > 100)
-        {
+        if (counter > 100) {
             --counter;
-        }
-        else if (counter > 0)
-        {
+        } else if (counter > 0) {
             --counter;
             Thread.yield();
-        }
-        else
-        {
+        } else {
             LockSupport.parkNanos(sleepTimeNs);
         }
-
         return counter;
     }
+
+    @Override
+    public void signalAllWhenBlocking() {
+    }
+
+
 }

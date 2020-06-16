@@ -31,7 +31,7 @@ public final class WorkerPool<T> {
     //workSequence:WorkProcessor实现一次消费的基础，记录了这组Processor获取event的offset
     private final Sequence workSequence = new Sequence(Sequencer.INITIAL_CURSOR_VALUE);
     private final RingBuffer<T> ringBuffer;
-    // WorkProcessors are created to wrap each of the provided WorkHandlers
+    //WorkerPool内的所有WorkProcessor
     private final WorkProcessor<?>[] workProcessors;
 
     /**
@@ -46,24 +46,15 @@ public final class WorkerPool<T> {
      * @param workHandlers     to distribute the work load across.
      */
     @SafeVarargs
-    public WorkerPool(
-        final RingBuffer<T> ringBuffer,
-        final SequenceBarrier sequenceBarrier,
-        final ExceptionHandler<? super T> exceptionHandler,
-        final WorkHandler<? super T>... workHandlers)
-    {
+    public WorkerPool(final RingBuffer<T> ringBuffer, final SequenceBarrier sequenceBarrier,
+        final ExceptionHandler<? super T> exceptionHandler, final WorkHandler<? super T>... workHandlers) {
         this.ringBuffer = ringBuffer;
         final int numWorkers = workHandlers.length;
         workProcessors = new WorkProcessor[numWorkers];
 
-        for (int i = 0; i < numWorkers; i++)
-        {
-            workProcessors[i] = new WorkProcessor<>(
-                ringBuffer,
-                sequenceBarrier,
-                workHandlers[i],
-                exceptionHandler,
-                workSequence);
+        for (int i = 0; i < numWorkers; i++) {
+            workProcessors[i] = new WorkProcessor<>(ringBuffer, sequenceBarrier, workHandlers[i],
+                    exceptionHandler, workSequence);
         }
     }
 

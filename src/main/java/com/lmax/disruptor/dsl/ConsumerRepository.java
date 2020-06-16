@@ -84,10 +84,8 @@ class ConsumerRepository<T> implements Iterable<ConsumerInfo>
         return getEventProcessorFor(handler).getSequence();
     }
 
-    public void unMarkEventProcessorsAsEndOfChain(final Sequence... barrierEventProcessors)
-    {
-        for (Sequence barrierEventProcessor : barrierEventProcessors)
-        {
+    public void unMarkEventProcessorsAsEndOfChain(final Sequence... barrierEventProcessors) {
+        for (Sequence barrierEventProcessor : barrierEventProcessors) {
             getEventProcessorInfo(barrierEventProcessor).markAsUsedInBarrier();
         }
     }

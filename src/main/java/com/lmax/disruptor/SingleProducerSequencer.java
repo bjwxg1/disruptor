@@ -98,9 +98,6 @@ public final class SingleProducerSequencer extends SingleProducerSequencerFields
         return next(1);
     }
 
-    /**
-     * @see Sequencer#next(int)
-     */
     @Override
     public long next(int n) {
         if (n < 1) {
@@ -108,8 +105,7 @@ public final class SingleProducerSequencer extends SingleProducerSequencerFields
         }
 
         long nextValue = this.nextValue;
-        //本次需要申请的Sequence
-        long nextSequence = nextValue + n;
+        long nextSequence = nextValue + n;////本次需要申请的Sequence
         //因为RingBuffer使用环形缓冲，所以计算可能产生环绕的点：nextSequence - bufferSize
         long wrapPoint = nextSequence - bufferSize;
         long cachedGatingSequence = this.cachedValue;
@@ -203,8 +199,7 @@ public final class SingleProducerSequencer extends SingleProducerSequencerFields
     }
 
     @Override
-    public long getHighestPublishedSequence(long lowerBound, long availableSequence)
-    {
+    public long getHighestPublishedSequence(long lowerBound, long availableSequence) {
         return availableSequence;
     }
 }

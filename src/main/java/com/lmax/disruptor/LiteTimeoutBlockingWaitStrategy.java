@@ -20,20 +20,14 @@ public class LiteTimeoutBlockingWaitStrategy implements WaitStrategy
     }
 
     @Override
-    public long waitFor(
-        final long sequence,
-        final Sequence cursorSequence,
-        final Sequence dependentSequence,
-        final SequenceBarrier barrier)
-        throws AlertException, InterruptedException, TimeoutException {
+    public long waitFor(final long sequence, final Sequence cursorSequence, final Sequence dependentSequence,
+                        final SequenceBarrier barrier) throws AlertException, InterruptedException, TimeoutException {
         long nanos = timeoutInNanos;
-
         long availableSequence;
         if (cursorSequence.get() < sequence) {
             synchronized (mutex) {
                 while (cursorSequence.get() < sequence) {
                     signalNeeded.getAndSet(true);
-
                     barrier.checkAlert();
                     nanos = awaitNanos(mutex, nanos);
                     if (nanos <= 0) {
@@ -46,17 +40,13 @@ public class LiteTimeoutBlockingWaitStrategy implements WaitStrategy
         while ((availableSequence = dependentSequence.get()) < sequence) {
             barrier.checkAlert();
         }
-
         return availableSequence;
     }
 
     @Override
-    public void signalAllWhenBlocking()
-    {
-        if (signalNeeded.getAndSet(false))
-        {
-            synchronized (mutex)
-            {
+    public void signalAllWhenBlocking() {
+        if (signalNeeded.getAndSet(false)) {
+            synchronized (mutex) {
                 mutex.notifyAll();
             }
         }

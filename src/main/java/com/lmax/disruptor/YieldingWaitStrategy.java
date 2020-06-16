@@ -36,12 +36,7 @@ public final class YieldingWaitStrategy implements WaitStrategy {
         while ((availableSequence = dependentSequence.get()) < sequence) {
             counter = applyWaitMethod(barrier, counter);
         }
-
         return availableSequence;
-    }
-
-    @Override
-    public void signalAllWhenBlocking() {
     }
 
     private int applyWaitMethod(final SequenceBarrier barrier, int counter) throws AlertException {
@@ -53,4 +48,10 @@ public final class YieldingWaitStrategy implements WaitStrategy {
         }
         return counter;
     }
+
+    @Override
+    public void signalAllWhenBlocking() {
+    }
+
+
 }

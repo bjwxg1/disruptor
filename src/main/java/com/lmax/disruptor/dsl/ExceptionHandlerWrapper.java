@@ -7,14 +7,12 @@ public class ExceptionHandlerWrapper<T> implements ExceptionHandler<T>
 {
     private ExceptionHandler<? super T> delegate = new FatalExceptionHandler();
 
-    public void switchTo(final ExceptionHandler<? super T> exceptionHandler)
-    {
+    public void switchTo(final ExceptionHandler<? super T> exceptionHandler) {
         this.delegate = exceptionHandler;
     }
 
     @Override
-    public void handleEventException(final Throwable ex, final long sequence, final T event)
-    {
+    public void handleEventException(final Throwable ex, final long sequence, final T event) {
         delegate.handleEventException(ex, sequence, event);
     }
 
